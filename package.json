@@ -3,8 +3,6 @@
 "version": "0.1.0",
 "description": "Tools for running and managing processes",
 "dependencies": {
-    "coffee-script": "1.2.0",
-    "q": "0.8.2",
-    "treadmill": "0.4.0"
+    "q": "0.8.2"
 }
 }
