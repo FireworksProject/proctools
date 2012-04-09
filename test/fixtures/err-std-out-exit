@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "stdout standard out"
+echo "stderr error out" >&2
+exit 1

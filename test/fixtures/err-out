@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo "stderr error out" >&2
