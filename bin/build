@@ -15,15 +15,17 @@ ensure_dir () {
     fi
 }
 
-"$THISDIR/setup"
+"$THISDIR/setup" || fail "unable to setup before build"
 ensure_dir "$DISTDIR"
 ensure_dir "$DISTDIR/lib"
 
-cp "$ROOTDIR/package.json" "$DISTDIR/"
+cp "$ROOTDIR/package.json" "$DISTDIR/" || fail "unable to copy package.json"
 cd "$DISTDIR"
-npm install
+npm install || fail "npm install error in dist/"
 
-coffee --compile --bare "$ROOTDIR/index.coffee"
-mv "$ROOTDIR/index.js" "$DISTDIR/"
-coffee --compile --bare "$LIBDIR/proctools.coffee"
-mv "$LIBDIR/proctools.js" "$DISTDIR/lib/"
+{ coffee --compile --bare "$ROOTDIR/index.coffee" && mv "$ROOTDIR/index.js" "$DISTDIR/"; } || \
+    fail "unable to compile index.coffee"
+{ coffee --compile --bare "$LIBDIR/proctools.coffee" && mv "$LIBDIR/proctools.js" "$DISTDIR/lib/"; } || \
+    fail "unable to compile lib/proctools.coffee"
+
+echo "ok: build done"

@@ -2,6 +2,10 @@ CHPR = require 'child_process'
 
 Q = require 'q'
 
+EXECVP_REGEX = /^execvp\(\): /
+
+# aOpts.command
+# aOpts.args
 exports.runCommand = (aOpts) ->
     deferred = Q.defer()
     encoding = 'utf8'
@@ -20,13 +24,18 @@ exports.runCommand = (aOpts) ->
 
     child.stderr.on 'data', (chunk) ->
         child.stderrBuffer += chunk
+
+        if EXECVP_REGEX.test(chunk)
+            err = new Error("failed to start child process")
+            err.stack = child.stderrBuffer.replace(EXECVP_REGEX, '')
+            return deferred.reject(err)
         return
 
     child.on 'exit', (code) ->
         if code
             err = new Error("child process exited with code #{code}")
             err.code = code
-            err.stack = stderrBuffer
+            err.stack = child.stderrBuffer
             return deferred.reject(err)
 
         child.exited = yes
