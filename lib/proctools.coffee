@@ -5,23 +5,39 @@ Q = require 'q'
 
 EXECVP_REGEX = /^execvp\(\): /
 
-# aOpts.command
-# aOpts.args
-# aOpts.background
-# aOpts.buffer
+# Run a command
+# aOpts.command The name of the command to run
+# aOpts.args An Array of arguments to pass to the command
+# aOpts.timeLimit A number of milliseconds to wait before timing out
+# aOpts.background Flag for background processes
+# aOpts.buffer Flag for buffering stdout
+#
+# If the background flag is set, then runCommand() resolves the process handle
+# after a single turn of the event loop and does not wait for an exit or stdout
+# event.
+#
+# If the buffer flag is set to true, then runCommand() resolves the process
+# handle after the first stdout event. If the buffer flag is a number greater
+# than 0, runCommand() will not resolve until the byte length of the stdout
+# buffer reaches the given number. When the buffer flag is set, runCommand()
+# will still reject with a timeout if the buffer is not reached within the
+# timelimit specified on aOpts.timelimit.
 exports.runCommand = (aOpts) ->
     deferred = Q.defer()
     encoding = 'utf8'
     command = aOpts.command
     args = aOpts.args
     fBackground = aOpts.background
-    timeLimit = 1000
-    timeout = null
+
+    timeLimit = if typeof aOpts.timeLimit is 'number'
+        aOpts.timeLimit
+    else 1000
 
     if aOpts.buffer
         buffer = if typeof aOpts.buffer is 'number' then aOpts.buffer else 1
     else buffer = off
 
+    timeout = null
     resolve = (err, result) ->
         if timeout isnt null
             clearTimeout(timeout)
@@ -37,7 +53,7 @@ exports.runCommand = (aOpts) ->
         err.code = 'PROCHUNG'
         return resolve(err)
 
-    if not fBackground and buffer is off
+    if not fBackground
         timeout = setTimeout(timeoutHandler, timeLimit)
 
     child = CHPR.spawn(command, args)
@@ -75,7 +91,9 @@ exports.runCommand = (aOpts) ->
     return deferred.promise
 
 
-# aRegex A RegExp or string
+# Find a running process by the given name
+# aName May be a string name or RegExp to match
+# Processes can be named in Node.js using `process.title = "myname"`
 exports.findProcess = (aRegex) ->
     cmd =
         command: 'ps'
@@ -99,17 +117,51 @@ exports.findProcess = (aRegex) ->
     return promise
 
 
-exports.kill = (pid) ->
-    if not pid then return Q.call(-> null)
+# Kill a process by process id
+# aPID If aPID is a number then it is assumed to be a process ID to kill
+exports.kill = (aPID) ->
+    if typeof aPID isnt 'number' then return Q.call(-> null)
     cmd =
         command: 'kill'
-        args: [pid]
+        args: [aPID]
     return exports.runCommand(cmd)
 
 
-exports.killByName = (name) ->
-    promise = exports.findProcess(name).then (procs) ->
+# Kill a process by name
+# aName May be a string name or RegExp
+# Processes can be named in Node.js using `process.title = "myname"`
+exports.killByName = (aName) ->
+    promise = exports.findProcess(aName).then (procs) ->
         kills = procs.map (proc) ->
             return exports.kill(proc.pid)
         return Q.all(kills)
+    return promise
+
+
+# Find an open port on the local machine (uses netstat)
+exports.findOpenPort = ->
+    parseNetstat = (result) ->
+        usedPorts = []
+        lines = result.stdoutBuffer.split('\n').filter (line) ->
+            if /^unix/.test(line) then return no else return yes
+
+        for line in lines
+            addr = line.split(/[\s]+/)[3]
+            if /:[0-9]{1,5}/.test(addr)
+                portString = addr.split(':').pop()
+                try
+                    port = parseInt(portString, 10)
+                catch intErr
+                    continue
+                usedPorts.push(port)
+
+        for port in [1024..65535]
+            if not (port in usedPorts) then return port
+        return null
+
+    opts =
+        command: 'netstat'
+        args: ['-a', '-n']
+
+    promise = exports.runCommand(opts).then(parseNetstat)
     return promise

@@ -4,8 +4,8 @@ setTimeout(function () {
 
 setTimeout(function () {
     process.stdout.write(' second stdout');
-}, 700);
+}, 1400);
 
 setTimeout(function () {
     process.exit();
-}, 1000);
+}, 1600);

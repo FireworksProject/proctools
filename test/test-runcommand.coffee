@@ -172,6 +172,7 @@ describe 'background processes', ->
         cmd =
             command: 'node'
             args: [PATH.join(FIXTURES, 'delay.js')]
+            timeLimit: 2000
             buffer: 13
 
         promise = PROCT.runCommand(cmd)
