@@ -93,3 +93,25 @@ exports.runBackground = (aOpts) ->
 
     proc.stderr.on('data', onerror)
     return proc
+
+
+exports.kill = (aPID) ->
+    if typeof aPID isnt 'number'
+        msg = "process id parameter must be a number"
+        throw new Error(msg)
+
+    cmd =
+        command: 'kill'
+        args: [aPID]
+
+    onfail = (err) ->
+        stderr = err.buffer.stderr
+        if /No such process/.test(stderr)
+            return false
+        return Q.reject(err)
+
+    promise = exports.runCommand(cmd).fail(onfail).then (result) ->
+        if result then return true
+        return false
+
+    return promise
