@@ -84,7 +84,7 @@ exports.runBackground = (aOpts) ->
         stderrBuffer += chunk
         if EXECVP_REGEX.test(chunk)
             err = new Error(stderrBuffer.replace(EXECVP_REGEX, ''))
-            return proc.emit(err)
+            return proc.emit('error', err)
 
         if stderrBuffer.length > 2048
             proc.stderr.removeListener('data', onerror)
