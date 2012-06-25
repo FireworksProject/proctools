@@ -72,18 +72,40 @@ describe 'error reporting', ->
     return
 
 
-###
+describe 'command line arguments', ->
+
+    it 'should pass arguments to the command', (done) ->
+        @expectCount(2)
+        cmd =
+            command: PATH.join(FIXTURES, 'echo-arguments')
+            args: ['foo', 'bar']
+
+        promise = PROCT.runCommand(cmd)
+
+        promise.then (result) ->
+            expect(result.buffer.stdout).toBe('foo bar\n')
+            expect(result.buffer.stderr).toBe('')
+            return done()
+
+        promise.fail (err) ->
+            expect().not.toExecute()
+            return done()
+        return
+
+    return
+
+
 describe 'buffers', ->
 
-    it 'should buffer stdout', ->
+    it 'should buffer stdout', (done) ->
+        @expectCount(4)
         promise = PROCT.runCommand({command: 'ls'})
 
         promise.then (result) ->
-            expect(result.stdoutBuffer).toBeA('string')
-            expect(result.stderrBuffer).toBeA('string')
-            expect(result.stdoutBuffer.length > 0).toBe(true)
-            expect(result.stderrBuffer.length).toBe(0)
-            expect(result.exited).toBe(true)
+            expect(result.buffer.stdout).toBeA('string')
+            expect(result.buffer.stderr).toBeA('string')
+            expect(result.buffer.stdout.length > 0).toBe(true)
+            expect(result.buffer.stderr.length).toBe(0)
             return done()
 
         promise.fail (err) ->
@@ -94,15 +116,15 @@ describe 'buffers', ->
         return
 
 
-    it 'should buffer stderr', ->
+    it 'should buffer stderr', (done) ->
+        @expectCount(4)
         promise = PROCT.runCommand({command: PATH.join(FIXTURES, 'err-out')})
 
         promise.then (result) ->
-            expect(result.stdoutBuffer).toBeA('string')
-            expect(result.stderrBuffer).toBeA('string')
-            expect(result.stderrBuffer).toBe('stderr error out\n')
-            expect(result.stdoutBuffer.length > 0).toBe(false)
-            expect(result.exited).toBe(true)
+            expect(result.buffer.stdout).toBeA('string')
+            expect(result.buffer.stderr).toBeA('string')
+            expect(result.buffer.stdout.length).toBe(0)
+            expect(result.buffer.stderr.length > 0).toBe(true)
             return done()
 
         promise.fail (err) ->
@@ -115,6 +137,7 @@ describe 'buffers', ->
     return
 
 
+###
 describe 'command line arguments', ->
 
     it 'should pass arguments to the command', ->
