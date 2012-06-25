@@ -33,6 +33,7 @@ exports.runCommand = (aOpts) ->
 
     if timeout isnt null
         timeout = setTimeout(->
+            proc.kill()
             msg = "process timeout: #{command}"
             if Array.isArray(args) and args.length
                 msg += (" #{args.join(' ')}")

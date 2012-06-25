@@ -27,6 +27,8 @@ describe 'error reporting', ->
 
 
     it 'should report error code and buffer stderr', (done) ->
+        @expectCount(4)
+
         promise = PROCT.runCommand({command: PATH.join(FIXTURES, 'err-std-out-exit')})
 
         promise.then (result) ->
@@ -41,6 +43,30 @@ describe 'error reporting', ->
             expect(err.buffer.stdout).toBe('stdout standard out\n')
             return done()
 
+        return
+
+
+    it 'should return a timeout error on timeout', (done) ->
+        @expectCount(4)
+
+        cmd =
+            command: 'node'
+            args: [PATH.join(FIXTURES, 'server.js'), 8754]
+            timeout: 100
+
+        promise = PROCT.runCommand(cmd)
+
+        promise.then (result) ->
+            expect().not.toExecute()
+            return done()
+
+        promise.fail (err) ->
+            err or= {}
+            expect(err.code).toBe('TIMEOUT')
+            expect(err.message).toMatch(/^process timeout: /)
+            expect(err.buffer.stderr).toBe('')
+            expect(err.buffer.stdout).toBe('http server started on 127.0.0.1:8754\n')
+            return done()
         return
 
     return
