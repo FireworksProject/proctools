@@ -21,3 +21,6 @@ node_modules/
 
 # And don't track the dist directory
 dist/
+
+# temp dir
+tmp/***

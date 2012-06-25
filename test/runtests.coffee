@@ -1,7 +1,7 @@
 FS = require 'fs'
 PATH = require 'path'
 
-TRM = require 'treadmill/nodejs_runner'
+TRM = require 'treadmill'
 
 checkTestFile = (filename) ->
     return /^test/.test(filename)

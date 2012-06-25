@@ -1,8 +1,0 @@
-#!/bin/bash
-THISDIR="$(cd `dirname "$0"` && pwd)"
-ROOTDIR="$( dirname "$THISDIR" )"
-
-cd "$ROOTDIR"
-npm install
-npm install coffee-script
-npm install treadmill

@@ -1,8 +1,8 @@
 {
-"name": "proctools",
-"version": "0.1.0",
-"description": "Tools for running and managing processes",
-"dependencies": {
-    "q": "0.8.2"
-}
+    "name": "proctools",
+    "version": "0.2.0",
+    "description": "Tools for running and managing processes",
+    "dependencies": {
+        "q": "0.8.5"
+    }
 }

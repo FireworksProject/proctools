@@ -1,55 +1,52 @@
 PATH = require 'path'
 
-PROCT = require '../'
+PROCT = require '../dist/'
 
 FIXTURES = PATH.join(__dirname, 'fixtures')
 
 
-it 'should report error on bad command', ->
-    promise = PROCT.runCommand({command: 'foo'})
+describe 'error reporting', ->
 
-    promise.then ->
-        expect().not.toExecute()
-        return done()
+    it 'should report error on bad command', (done) ->
+        @expectCount(3)
 
-    promise.fail (err) ->
-        err or= {}
-        expect(err.message).toBe('failed to start child process')
-        return done()
+        promise = PROCT.runCommand({command: 'foo'})
+
+        promise.then ->
+            expect().not.toExecute()
+            return done()
+
+        promise.fail (err) ->
+            err or= {}
+            expect(err.message).toBe('No such file or directory\n')
+            expect(err.buffer.stderr).toBe('execvp(): No such file or directory\n')
+            expect(err.buffer.stdout).toBe('')
+            return done()
+
+        return
+
+
+    it 'should report error code and buffer stderr', (done) ->
+        promise = PROCT.runCommand({command: PATH.join(FIXTURES, 'err-std-out-exit')})
+
+        promise.then (result) ->
+            expect().not.toExecute()
+            return done()
+
+        promise.fail (err) ->
+            err or= {}
+            expect(err.code).toBe(1)
+            expect(err.message).toBe('child process exited with code 1')
+            expect(err.buffer.stderr).toBe('stderr error out\n')
+            expect(err.buffer.stdout).toBe('stdout standard out\n')
+            return done()
+
+        return
 
     return
 
 
-it 'should report error code and buffer stderr', ->
-    promise = PROCT.runCommand({command: PATH.join(FIXTURES, 'err-std-out-exit')})
-
-    promise.then (result) ->
-        expect().not.toExecute()
-        return done()
-
-    promise.fail (err) ->
-        err or= {}
-        expect(err.code).toBe(1)
-        expect(err.message).toBe('child process exited with code 1')
-        expect(err.stack).toBe('stderr error out\n')
-        return done()
-
-    return
-
-
-it 'should flag an exited command', ->
-    promise = PROCT.runCommand({command: 'ls'})
-
-    promise.then (result) ->
-        expect(result.exited).toBe(true)
-        return done()
-
-    promise.fail (err) ->
-        expect().not.toExecute()
-        return done()
-    return
-
-
+###
 describe 'buffers', ->
 
     it 'should buffer stdout', ->
@@ -190,6 +187,7 @@ describe 'background processes', ->
         return
 
     return
+###
 
 
 reportError = (err) ->
