@@ -51,7 +51,7 @@ describe 'error reporting', ->
 
         cmd =
             command: 'node'
-            args: [PATH.join(FIXTURES, 'server.js'), 8754]
+            args: [PATH.join(FIXTURES, 'delay.js')]
             timeout: 100
 
         promise = PROCT.runCommand(cmd)
@@ -65,7 +65,7 @@ describe 'error reporting', ->
             expect(err.code).toBe('TIMEOUT')
             expect(err.message).toMatch(/^process timeout: /)
             expect(err.buffer.stderr).toBe('')
-            expect(err.buffer.stdout).toBe('http server started on 127.0.0.1:8754\n')
+            expect(err.buffer.stdout).toBe('first stdout')
             return done()
         return
 

@@ -90,3 +90,41 @@ describe 'command line arguments', ->
         return
 
     return
+
+
+describe 'start', ->
+
+    gServerProc = null
+
+    afterEach (done) ->
+        if gServerProc then gServerProc.kill()
+        return done()
+
+
+    it 'should report stderr if no stdout detected after a timeout', (done) ->
+        @expectCount(3)
+        cmd =
+            command: PATH.join(FIXTURES, 'err-out')
+            timeout: 50
+
+        proc = PROCT.start cmd, (err, proc) ->
+            expect(proc).toBeUndefined()
+            expect(err.buffer.stdout).toBe('')
+            expect(err.buffer.stderr).toBe('stderr error out\n')
+            return done()
+        return
+
+
+    it 'should call the callback after stdout', (done) ->
+        @expectCount(2)
+        cmd =
+            command: 'node'
+            args: [PATH.join(FIXTURES, 'server.js'), 8154]
+
+        gServerProc = PROCT.start cmd, (err, proc) ->
+            expect(proc.buffer.stdout).toBe('http server started on 127.0.0.1:8154\n')
+            expect(proc.buffer.stderr).toBe('')
+            return done()
+        return
+
+    return

@@ -95,6 +95,57 @@ exports.runBackground = (aOpts) ->
     return proc
 
 
+exports.start = (aOpts, aCallback) ->
+    timeout = if typeof aOpts.timeout is 'number' then aOpts.timeout
+    else 1000
+    stdoutBuffer = ''
+    stderrBuffer = ''
+
+    resolved = no
+    resolve = (err) ->
+        if resolved then return
+        resolved = yes
+        if timeout isnt null then clearTimeout(timeout)
+        buffer =
+            stdout: stdoutBuffer
+            stderr: stderrBuffer
+
+        if err
+            err.buffer = buffer
+            aCallback(err)
+        else
+            proc.buffer = buffer
+            aCallback(null, proc)
+        proc.stdout.removeListener('data', onstdout)
+        proc.stderr.removeListener('data', onstderr)
+        return
+
+    timeout = setTimeout(->
+        proc.kill()
+        msg = "process timeout: #{aOpts.command}"
+        if Array.isArray(aOpts.args) and aOpts.args.length
+            msg += (" #{aOpts.args.join(' ')}")
+        err = new Error(msg)
+        err.code = 'TIMEOUT'
+        return resolve(err)
+    , timeout)
+
+    onstdout = (chunk) ->
+        stdoutBuffer = chunk
+        return resolve()
+
+    onstderr = (chunk) ->
+        stderrBuffer += chunk
+        return
+
+    proc = exports.runBackground(aOpts)
+
+    proc.on('error', resolve)
+    proc.stdout.on('data', onstdout)
+    proc.stderr.on('data', onstderr)
+    return proc
+
+
 exports.kill = (aPID) ->
     if typeof aPID isnt 'number'
         msg = "process id parameter must be a number"
