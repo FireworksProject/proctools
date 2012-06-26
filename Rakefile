@@ -26,6 +26,18 @@ task :setup => 'tmp/setup.dump' do
     puts "dev environment setup done"
 end
 
+desc "Publish proctools with npm"
+task :publish => [:clean, :setup, :build] do
+    sh 'bin/runtests' do |ok, id|
+        ok or fail "not publishing: test failed"
+    end
+    Dir.chdir 'dist'
+    sh 'npm publish' do |ok, id|
+        ok or fail "npm could not publish proctools"
+    end
+    Dir.chdir ROOT
+end
+
 task :clean do
     rm_rf 'tmp'
     rm_rf 'node_modules'
