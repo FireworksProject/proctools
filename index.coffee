@@ -5,6 +5,9 @@ Q = require 'q'
 EXECVP_REGEX = /^execvp\(\): /
 
 
+# aOpts.command
+# aOpts.args
+# aOpts.timeout
 exports.runCommand = (aOpts) ->
     deferred = Q.defer()
     encoding = 'utf8'
@@ -69,6 +72,8 @@ exports.runCommand = (aOpts) ->
     return deferred.promise
 
 
+# aOpts.command
+# aOpts.args
 exports.runBackground = (aOpts) ->
     encoding = 'utf8'
     command = aOpts.command
@@ -95,6 +100,9 @@ exports.runBackground = (aOpts) ->
     return proc
 
 
+# aOpts.command
+# aOpts.args
+# [aOpts.timeout = 1000]
 exports.start = (aOpts, aCallback) ->
     timeout = if typeof aOpts.timeout is 'number' then aOpts.timeout
     else 1000
@@ -165,4 +173,54 @@ exports.kill = (aPID) ->
         if result then return true
         return false
 
+    return promise
+
+
+exports.netstat = ->
+    cmd =
+        command: 'netstat'
+        args: ['-a', '-n', '-p']
+        timeout: 5000
+
+    promise = exports.runCommand(cmd).then (proc) ->
+        result = {}
+        lines = proc.buffer.stdout.split('\n')
+        lines.forEach (line) ->
+            if /^(tcp|udp)/.test(line)
+                line = parseLine(line)
+                item = result[line.ip]
+                if not item
+                    item = result[line.ip] = []
+                item.push({port: line.port, pid: line.pid, name: line.name})
+            return
+        return result
+
+    parseLine = (line) ->
+        parts = line.split(/[\s]+/)
+        address = parts[3]
+        proc = parts[6]
+        parts = address.split(':')
+        port = parts.pop()
+        ip = parts.shift() or ''
+        [pid, name] = proc.split('/')
+        if not pid or pid is '-' then pid = null
+        if not name then name = null
+        return {ip: ip, port: port, pid: pid, name: name}
+    return promise
+
+
+exports.findOpenPort = (ip) ->
+    promise = exports.netstat().then (result) ->
+        used = []
+        addresses = result['0.0.0.0'] or []
+        addresses = addresses.concat(result[''] or [])
+        addresses = addresses.concat(result[ip] or [])
+
+        for addr in addresses
+            used.push(addr.port)
+
+        for port in [1024..65535]
+            if not (port in used) then return port
+
+        return null
     return promise
