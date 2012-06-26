@@ -26,6 +26,15 @@ it 'should resolve `false` if the process does not exist', (done) ->
 
 it 'should resolve `true` if the process exists', (done) ->
     @expectCount(2)
+
+    gotData = no
+    gotExit = no
+    maybeDone = (ondata, onexit) ->
+        if ondata then gotData = yes
+        if onexit then gotExit = yes
+        if gotData and gotExit then done()
+        return
+
     cmd =
         command: 'node'
         args: [PATH.join(FIXTURES, 'server.js'), 8254]
@@ -36,11 +45,11 @@ it 'should resolve `true` if the process exists', (done) ->
 
         promise.fail(done).then (result) ->
             expect(result).toBe(true)
-            return
+            return maybeDone(true)
         return
 
     child.on 'exit', (code) ->
         expect(code).toBe(1)
-        return done()
+        return maybeDone(null, true)
 
     return
