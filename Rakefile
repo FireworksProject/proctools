@@ -8,6 +8,8 @@ task :default => :build
 desc "Build Proctools"
 build_deps = [
     :setup,
+    'dist/README.md',
+    'dist/MIT-LICENSE',
     'dist/package.json',
     'dist/index.js'
 ]
@@ -47,6 +49,14 @@ file 'dist/package.json' => ['package.json', 'dist'] do |task|
         ok or fail "npm could not install dependencies"
     end
     Dir.chdir ROOT
+end
+
+file 'dist/README.md' => ['README.md', 'dist'] do |task|
+    FileUtils.cp task.prerequisites.first, task.name
+end
+
+file 'dist/MIT-LICENSE' => ['MIT-LICENSE', 'dist'] do |task|
+    FileUtils.cp task.prerequisites.first, task.name
 end
 
 file 'dist/index.js' => ['index.coffee', 'dist'] do |task|
