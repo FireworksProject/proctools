@@ -18,8 +18,8 @@ describe 'error reporting', ->
 
         promise.fail (err) ->
             err or= {}
-            expect(err.message).toBe('No such file or directory\n')
-            expect(err.buffer.stderr).toBe('execvp(): No such file or directory\n')
+            expect(err.message).toBe('child process exited with code 127')
+            expect(err.buffer.stderr).toBe('')
             expect(err.buffer.stdout).toBe('')
             return done()
 
