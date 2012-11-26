@@ -1,6 +1,6 @@
 {
     "name": "proctools",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "description": "Tools for running and managing processes",
     "dependencies": {
         "q": "0.8.5"
